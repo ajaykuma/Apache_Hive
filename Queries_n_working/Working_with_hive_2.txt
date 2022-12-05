@@ -1,0 +1,114 @@
+#load data from hdfs
+load data inpath '/mydata/kv1.txt' overwrite into table tbl2;
+or 
+hdfs dfs -cp /mydata/kv1.txt /user/hive/warehouse/mydb.db/tbl2;
+or
+hdfs dfs -mv /mydata/kv1.txt /user/hive/warehouse/mydb.db/tbl2;
+or
+--get data from hdfs to local machine and then use put command
+hdfs dfs -get /mydata/kv1.txt mydata
+hdfs dfs -put mydata/kv1.txt /user/hive/warehouse/mydb.db/tbl2;
+
+
+#load data from local machine
+load data inpath 'mydata/kv1.txt' overwrite into table tbl2;
+load data inpath 'mydata/kv1.txt' into table tbl2;
+load data inpath 'mydata/kv1.txt' into table tbl2;
+load data inpath 'mydata/kv1.txt' into table tbl2;
+
+#from hive
+hive (mydb)> show tables;
+hive (mydb)> !hdfs dfs -ls -R /user/hive/warehouse/mydb.db;
+
+#merging data of a table into multiple files (if tbl2 was loaded with multiple files)
+hive (mydb)> create table tbl3 as select * from tbl2;
+
+hive (mydb)> !hdfs dfs -ls -R /user/hdu/ajmydb.db/tbl2;
+
+hive (mydb)>!hdfs dfs -ls -R /user/hdu/ajmydb.db/tbl3;
+
+--enabling compression
+#going for default compression
+hive (mydb)> set hive.exec.compress.output=true;
+mapreduce.output.fileoutputformat.compress=true;
+hive (mydb)> create table tbl4 as select * from tbl2;
+
+#going for specific compression
+hive (mydb)> set hive.exec.compress.output=true;
+set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.GzipCodec;
+create table tbl5 as select * from tbl2;
+
+hive > select * from tbl5 where id > 300 order by id desc;
+
+----------
+--Working with complex data types
+#create table with complex data types
+hive (mydb)> create table tbl6(id int, name string, phpreferences array<string>,loc map <string,string>)
+             > row format delimited
+             > fields terminated by ','
+             > collection items terminated by ':'
+             > map keys terminated by '$';
+
+load data local inpath 'mydata/hivef3.txt' overwrite into table tbl6;
+
+
+hive (mydb)> select id,name,phpreferences from tbl6 where size(phpreferences) >= 3;
+hive (mydb)> select id,name,phpreferences[1] as second_pref from tbl6 where size(phpreferences) >= 3;
+hive (mydb)> select id, name, phpreferences, regexp_replace(phpreferences[0],'iphone','reach_customer') from tbl6;
+
+select id, name, phpreferences, regexp_replace(phpreferences[0],'iphone','reach_customer'),
+concat_ws(phpreferences[0],phpreferences[1],'@@') as code_name from tbl6;
+
+select name, phpreferences, regexp_replace(phpreferences[0],'iphone','reach_customer') ,concat_ws(phpreferences[0],phpreferences[1],'@') from tbl6;
+select name, phpreferences, regexp_replace(phpreferences[0],'iphone','reach_customer') ,concat_ws(phpreferences[0],name,'@') from tbl6;
+
+hive (mydb)> select name, phpreferences, regexp_replace(phpreferences[0],'iphone','reach_customer') as POA ,
+reverse(concat_ws(phpreferences[0],name,'@')) as code_cust from tbl6;
+
+hive (mydb)> select name, phpreferences, regexp_replace(phpreferences[0],'iphone','reach_customer')
+as POA ,substr(reverse(concat_ws(phpreferences[0],name,'@')),3) as code_cust from tbl6;
+
+----
+hive (mydb)> create table tbl7(id int,name string,phpref array<string>,loc map<string,string>,addr struct<city:string,street:int,country:string>)
+row format delimited
+ fields terminated by ','
+collection items terminated by ':'
+map keys terminated by '$' ;
+
+load data local inpath 'mydata/hivef5.txt' overwrite into table tbl7;
+
+hive (mydb)> select explode(phpref) from tbl7;
+
+----
+#Partitioned Tables
+create table tbl8(id int,name string) partitioned by (doj string);
+hive (mydb)> load data local inpath 'mydata/kv1.txt' overwrite into table tbl8 partition (doj="1stfeb");
+
+hive (mydb)> load data local inpath 'mydata/kv1.txt' overwrite into table tbl8 partition (doj="1stmar");
+
+hive (mydb)> load data local inpath 'mydata/kv1.txt' into table tbl8 partition (doj="1stmar");
+
+Time taken: 0.885 seconds
+hive (mydb)> load data local inpath 'mydata/kv1.txt' into table tbl8 partition (doj="1stmar");
+
+hive (mydb)> select * from tbl8 where doj='1stjan';
+
+----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

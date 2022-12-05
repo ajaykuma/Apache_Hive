@@ -112,7 +112,7 @@ set hive.metastore.warehouse.dir=/user/hdu;
 set hive.cli.print.current.db=true;
 set hive.cli.print.header=true;
 
-describe extended tbl2;
+describe extended tbl1;
 
 @one shot commands
 hive -S -e "show databases"
@@ -122,7 +122,7 @@ vi hiveq1.hql
 
 use mydb;
 show tables;
-create external table tbl3(id int,name string) location 'tbl3data';
+create external table tbl2(id int,name string) location 'tbl2data';
 show tables;
 
 hive -f hiveq1.hql > hiveq1o.out
