@@ -1,0 +1,184 @@
+#Path for hive
+ls /etc/hive/conf/
+
+#In case of customized setup the path could be '/usr/local/hive' (as in our case)
+--default settings which hive uses
+more /usr/local/hive/conf/hive-default.xml.template
+--for customized settings 
+more /usr/local/hive/conf/hive-site.xml
+
+--property that points to path where hive will store its data on HDFS
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>/user/hive/warehouse</value>
+    <description>location of default database for the warehouse</description>
+  </property>
+
+--When metastore service started on node (where hive-site.xml exists within hive/conf), clients can connect to hive using this property
+--add this property in 'hive-site.xml' even if no other properties exist for clients to connect and point to node where metastore service is running
+  <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://host:9083</value>
+    <description>Thrift URI for the remote metastore. Used by metastore client 
+    to connect to remote metastore.</description>
+  </property>
+
+  
+--HiveServer2 service to be running for clients(ADS/Beeline/Dbeaver/IDEs) to connect and work with hive
+
+<property>
+    <name>hive.server2.thrift.bind.host</name>
+    <value>host</value>
+    <description>Bind host on which to run the HiveServer2 Thrift service.</description>
+  </property>
+
+
+--properties that point to metastore in RDBMS. Client machines need not have these in 'hive-site.xml'.
+--Clients can connect to hive via 'metastore uris property' pointing to metastore service OR
+--Clients can connect to hive via 'HiveServer2' service.
+
+###
+<property>
+<name>javax.jdo.option.ConnectionURL</name>
+<value>jdbc:mysql://m1/hive3?useSSL=false</value>
+</property>
+
+<property>
+<name>javax.jdo.option.ConnectionDriverName</name>
+<value>com.mysql.jdbc.Driver</value>
+</property>
+
+<property>
+<name>javax.jdo.option.ConnectionUserName</name>
+<value>hdu</value>
+</property>
+
+<property>
+<name>javax.jdo.option.ConnectionPassword</name>
+<value>password</value>
+</property>
+
+###
+
+--When hiveServer2 running and using beeline to connect
+>beeline
+!connect jdbc:hive2://host:10000
+username
+pswd
+!exit
+
+--working with hive
+@command line > hive
+@command line > beeline
+@IDE-eclipse/intellij/visual studio
+@by creating files
+@use one shot commands
+@connect to hive from spark
+
+@hive
+create database mydb;
+use mydb;
+
+--create table with no formatting specified (i.e. default delimiters)
+create table tbl1(id int,name string);
+
+hive> !hdfs dfs -ls /user/hive/warehouse/;
+drwxr-xr-x   - hdu supergroup          0 2021-08-02 06:15 /user/hive/warehouse/mydb.db
+
+describe database mydb;
+describe formatted tbl1;
+---hdfs://m1:9000/user/hive/warehouse/mydb.db/tbl1
+select * from tbl1;
+
+--properties can be permanently set in hive-site.xml or temporarily in hive shell or before executing queries in Aqua Data studio
+
+--checking & setting properties
+hive> set hive.cli.print.current.db;
+hive.cli.print.current.db=false
+hive> set hive.cli.print.current.db=true;
+hive (mydb)> set hive.cli.print.header;
+hive.cli.print.header=false
+hive (mydb)> set hive.cli.print.header=true;
+hive (mydb)> select * from tbl1;
+OK
+tbl1.id tbl1.name
+Time taken: 2.826 seconds
+hive (mydb)> exit;
+
+--If using hive shell and to set properties for all sessions
+create a file 'vi .hiverc'
+
+set hive.metastore.warehouse.dir=/user/hdu;
+set hive.cli.print.current.db=true;
+set hive.cli.print.header=true;
+
+describe extended tbl2;
+
+@one shot commands
+hive -S -e "show databases"
+
+@creating n executing a file
+vi hiveq1.hql
+
+use mydb;
+show tables;
+create external table tbl3(id int,name string) location 'tbl3data';
+show tables;
+
+hive -f hiveq1.hql > hiveq1o.out
+
+@IDE-eclipse/intellij/visual studio
+
+--Load data (Using load command)
+>hive
+load data local inpath '/user/local/hive/examples/files/kv1.txt' overwrite into table tbl1;
+
+
+--without overwrite (if using same file, load will create copies of file while loading)
+
+load data local inpath '/usr/local/hive/examples/files/kv1.txt' into table tbl1;
+load data local inpath '/usr/local/hive/examples/files/kv1.txt' into table tbl1;
+load data local inpath '/usr/local/hive/examples/files/kv1.txt' into table tbl1;
+load data local inpath '/usr/local/hive/examples/files/kv1.txt' into table tbl1;
+
+
+--Load data can also be done by copying file into table specific folder using (hdfs dfs -put or -cp or -mv etc)
+--Note HDFS doesn't allow same file to be written unless using '-f' for overwrite
+hive (mydb)> !hdfs dfs -put /usr/local/hive/examples/files/kv1.txt /user/hive/warehouse/mydb.db/tbl1;
+
+hive (mydb)> !hdfs dfs -cp <path on hdfs>/kv1.txt /user/hive/warehouse/mydb.db/tbl1;
+
+hive (mydb)> load data local inpath 'mydata-local1/kv1.txt' into table tbl1;
+
+hive (mydb)> !hdfs dfs -ls /user/hive/warehouse/mydb.db/tbl1;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
