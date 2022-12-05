@@ -1,36 +1,39 @@
-﻿Import Data using sqoop from rdbms in avrodatafile format.
+﻿#Avro
+--If data imported using tools like sqoop and in avro format.
+--Example
+Import Data using sqoop from rdbms in avrodatafile format.
 
 u1@u1:/usr/local/hadoop$ sqoop import --connect jdbc:mysql://127.0.0.1/mysql --username root -P 
 --table help_keyword --m 1 --as-avrodatafile --target-dir /help1
 
 Download avro-tools from 
 http://www.apache.org/dyn/closer.cgi/avro/
+http://archive.apache.org/dist/avro/avro-1.8.2/java/
 
 Get schema of avrofile
 u1@u1:~$ hadoop jar avro-tools-1.8.2.jar getschema /help1/part-m-00000.avro > schema1.avsc
 
-u1@u1:~$ ls
-avro-tools-1.8.2.jar  Desktop    Downloads  eclipse-installer  examples.desktop  part-m-00000.avro  Public        Templates  Videos
-dataset               Documents  eclipse    eclipse-workspace  Music             Pictures           schema1.avsc  tip.json
+--for an existing avro file
+java -jar avro-tools-1.8.2.jar getschema Datasets_For_Work-main/users.avro > schema2.avsc
+
 
 Create directory on hdfs and put schema file on hdfs
 u1@u1:~$ hdfs dfs -mkdir /user/avro
 u1@u1:~$ hdfs dfs -mkdir /user/avro/schemas
 u1@u1:~$ hdfs dfs -put schema1.avsc /user/avro/schemas
 
-Now lets create hiev table which would be stored as avro
+Now lets create hive table which would be stored as avro
 u1@u1:~$ cd /usr/local/hive
 u1@u1:/usr/local/hive$ bin/hive
 
-hive> create table avrotbl1                                                       
-    > row format serde 'org.apache.hadoop.hive.serde2.avro.AvroSerDe'             
-    > stored as inputformat                                          
-    > 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'   
-    > outputformat                                                   
-    > 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'  
-    > TBLproperties
-    > ('avro.schema.url'='hdfs://u1:9000/user/avro/schemas/schema1.avsc');
-Time taken: 2.851 seconds
+create table avrotbl1                                                       
+row format serde 'org.apache.hadoop.hive.serde2.avro.AvroSerDe'             
+stored as inputformat                                          
+'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'   
+outputformat                                                   
+'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'  
+TBLproperties
+('avro.schema.url'='hdfs://m1:9000/user/avro/schemas/schema1.avsc');
 
 
 hive> !hdfs dfs -ls /user/hive/warehouse;
@@ -47,5 +50,37 @@ Copy avro file into avrotbl1 directory
 or optionally u can load data into table using load command.
 hive> !hdfs dfs -cp /help1/part-m-00000.avro /user/hive/warehouse/avrotbl1;
 hive> select * from avrotbl1;  
+
+-------
+--In newer version of hive
+CREATE TABLE TBL10 (NUMBER_ID INT, FIRST_NAME STRING, LAST_NAME STRING) STORED AS AVRO TBLPROPERTIES ('AVRO.COMPRESS'='SNAPPY'); 
+
+or
+
+CREATE TABLE TBL10
+ROW FORMAT SERDE 'ORG.APACHE.HADOOP.HIVE.SERDE2.AVRO.AVROSERDE'
+STORED AS INPUTFORMAT 'ORG.APACHE.HADOOP.HIVE.QL.IO.AVRO.AVROCONTAINERINPUTFORMAT'
+OUTPUTFORMAT 'ORG.APACHE.HADOOP.HIVE.QL.IO.AVRO.AVROCONTAINEROUTPUTFORMAT'
+TBLPROPERTIES ('AVRO.SCHEMA.LITERAL'='{
+   "NAME": "MY_RECORD",
+   "TYPE": "RECORD",
+   "FIELDS": [
+      {"NAME":"NUMBER_ID", "TYPE":"INT"},
+      {"NAME":"FIRST_NAME", "TYPE":"STRING"},
+      {"NAME":"LAST_NAME", "TYPE":"STRING"},
+      ]}');
+
+Here "AVRO.SCHEMA.LITERAL" specifies the definition of the table.
+Once the Avro table is created, to enable snappy compression following properties needs to be set under Environment SQL of Hive connection:
+
+set hive.exec.compress.output=true;
+set avro.output.codec=snappy;
+
+----
+#Parquet
+CREATE TABLE TBL11 (NUMBER_ID INT, FIRST_NAME STRING, LAST_NAME STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS PARQUET;
+
+--insert
+INSERT INTO TABLE TBL11 SELECT * FROM TBLXX;
 
 
