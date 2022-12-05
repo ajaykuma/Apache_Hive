@@ -1,4 +1,5 @@
---complex datatypes
+--Note** Table names and DBnames might need to be changed as per your working and if previous file exercices were tested and worked on
+--More on Complex datatypes
 
 Create database
 ------------
