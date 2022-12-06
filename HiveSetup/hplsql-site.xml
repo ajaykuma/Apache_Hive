@@ -1,0 +1,72 @@
+<configuration>
+<property>
+  <name>hplsql.conn.default</name>
+  <value>hive2conn</value>
+  <description>The default connection profile</description>
+</property>
+
+<property>
+  <name>hplsql.conn.convert.hiveconn</name>
+  <value>true</value>
+  <description>Convert SQL statements before execution</description>
+</property>
+
+<property>
+  <name>hplsql.conn.hive2conn</name>
+  <value>org.apache.hive.jdbc.HiveDriver;jdbc:hive2://m1:10000</value>
+  <description>HiveServer2 JDBC connection</description>
+</property>
+
+<property>
+  <name>hplsql.conn.init.hive2conn</name>
+  <value>
+  set hive.execution.engine=mr;
+  set mapred.framework.name=local;
+  </value>
+  <description>Statements for execute after connection to the database</description>
+</property>
+
+<property>
+  <name>hplsql.conn.convert.hive2conn</name>
+  <value>true</value>
+  <description>Convert SQL statements before execution</description>
+</property>
+
+<property>
+  <name>hplsql.dual.table</name>
+  <value></value>
+  <description>Single row, single column table for internal operations</description>
+</property>
+
+<property>
+  <name>hplsql.insert.values</name>
+  <value>native</value>
+  <description>How to execute INSERT VALUES statement: native (default) and select</description>
+</property>
+
+<property>
+  <name>hplsql.onerror</name>
+  <value>exception</value>
+  <description>Error handling behavior: exception (default), seterror and stop</description>
+</property>
+
+<property>
+  <name>hplsql.temp.tables</name>
+  <value>native</value>
+  <description>Temporary tables: native (default) and managed</description>
+</property>
+
+<property>
+  <name>hplsql.temp.tables.schema</name>
+  <value></value>
+  <description>Schema for managed temporary tables</description>
+</property>
+
+<property>
+  <name>hplsql.temp.tables.location</name>
+  <value>/tmp/plhql</value>
+  <description>LOcation for managed temporary tables in HDFS</description>
+</property>
+
+
+</configuration>
