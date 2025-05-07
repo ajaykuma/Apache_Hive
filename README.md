@@ -1,3 +1,3 @@
 # ApacheHiveWr
 Working examples of Hive
->>>> Content is being reviewed & updated
+> 🚧 This repository is currently being refined and improved. Stay tuned!
